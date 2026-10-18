@@ -1,0 +1,17 @@
+# The evaluator runs these commands exactly, in order, from a fresh checkout.
+
+setup_commands:
+  - "pip install torch==2.14.0 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu"
+  - "pip install -r requirements.txt"
+  - "python src/main.py download --out data/videomme"
+
+run_commands:
+  - "python src/main.py labels --jsonl data/videomme/qa/test.jsonl --out data/labels.csv"
+  - "python src/main.py train --videos data/videomme/videos --labels data/labels.csv --model artifacts/router.pkl"
+  - "python src/main.py evaluate --videos data/videomme/videos --labels data/labels.csv --model artifacts/router.pkl --report artifacts/metrics.json"
+  - "python src/main.py predict --videos data/videomme/videos --labels data/labels.csv --model artifacts/router.pkl"
+
+test_commands:
+  - "python -m pytest tests -q"
+
+notes: "CPU only. No GPU. setup downloads the Video-MME 10% sample (aintropy-ai/video-mme-sample10, about 11 GB). Training and evaluation then probe each video with a fixed frame budget, so an hour-long file costs about the same as a short clip. Expect several minutes after the download, not a GPU job. The labels are the subcategory-to-chunker map; docs/solution.md says to skim them before quoting the score."
